@@ -1,21 +1,23 @@
-// ignore_for_file: must_be_immutable
+// ignore_for_file: must_be_immutable, argument_type_not_assignable_to_error_handler
 
 import 'package:flutter/material.dart';
 import 'package:nb_utils/nb_utils.dart';
 import 'package:animated_text_kit/animated_text_kit.dart';
 import 'chatgpt.dart';
+import 'chatgpt_strings.dart';
 
-class ChatGptSheetBottomSheet extends StatefulWidget {
+class ChatGPTSheetBottomSheet extends StatefulWidget {
   final ScrollController scrollController;
   List<String> recentList;
+  bool showDebugLogs;
   final InputDecoration? promptFieldInputDecoration;
-  ChatGptSheetBottomSheet({super.key, required this.recentList, this.promptFieldInputDecoration, required this.scrollController});
+  ChatGPTSheetBottomSheet({super.key, required this.recentList, this.showDebugLogs = false, this.promptFieldInputDecoration, required this.scrollController});
 
   @override
-  State<ChatGptSheetBottomSheet> createState() => _ChatGptSheetBottomSheetState();
+  State<ChatGPTSheetBottomSheet> createState() => _ChatGPTSheetBottomSheetState();
 }
 
-class _ChatGptSheetBottomSheetState extends State<ChatGptSheetBottomSheet> {
+class _ChatGPTSheetBottomSheetState extends State<ChatGPTSheetBottomSheet> {
   TextEditingController promptCont = TextEditingController();
   TextEditingController answerCont = TextEditingController();
 
@@ -48,20 +50,20 @@ class _ChatGptSheetBottomSheetState extends State<ChatGptSheetBottomSheet> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text("Generate using AI", style: boldTextStyle(color: context.primaryColor, size: 16)).expand(),
+                          Text(GPTModuleStrings.generateUsingAI, style: boldTextStyle(color: context.primaryColor, size: 16)).expand(),
                           CloseButton(color: context.primaryColor),
                         ],
                       ),
                       AppTextField(
                         textFieldType: TextFieldType.MULTILINE,
                         controller: promptCont,
-                        decoration: widget.promptFieldInputDecoration ?? defaultInputDecoration(hint: "write text here..."),
+                        decoration: widget.promptFieldInputDecoration ?? defaultInputDecoration(hint: GPTModuleStrings.writeTextHere),
                       ),
                       32.height,
                       Column(
                         children: [
                           AppButton(
-                            text: answerCont.text.isNotEmpty ? "Re-generate" : "Generate",
+                            text: answerCont.text.isNotEmpty ? GPTModuleStrings.reGenerate : GPTModuleStrings.generate,
                             color: context.primaryColor,
                             textStyle: boldTextStyle(color: white),
                             width: context.width(),
@@ -80,7 +82,7 @@ class _ChatGptSheetBottomSheetState extends State<ChatGptSheetBottomSheet> {
                                     finish(context, answerCont.text);
                                   },
                                   child: Text(
-                                    "Use This",
+                                    GPTModuleStrings.useThis,
                                     style: boldTextStyle(color: context.primaryColor),
                                   ),
                                 ),
@@ -90,7 +92,7 @@ class _ChatGptSheetBottomSheetState extends State<ChatGptSheetBottomSheet> {
                                     finish(context, promptCont.text);
                                   },
                                   child: Text(
-                                    "Use my text",
+                                    GPTModuleStrings.useMyText,
                                     style: boldTextStyle(color: context.primaryColor),
                                   ),
                                 ),
@@ -132,7 +134,7 @@ class _ChatGptSheetBottomSheetState extends State<ChatGptSheetBottomSheet> {
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Text("Recents", style: boldTextStyle(color: context.primaryColor, size: 16)),
+                                  Text(GPTModuleStrings.recents, style: boldTextStyle(color: context.primaryColor, size: 16)),
                                   IconButton(
                                     icon: Icon(Icons.clear_all_rounded, color: context.primaryColor),
                                     onPressed: () async {
@@ -143,9 +145,9 @@ class _ChatGptSheetBottomSheetState extends State<ChatGptSheetBottomSheet> {
                                           setState(() {});
                                         },
                                         primaryColor: context.primaryColor,
-                                        negativeText: "No",
-                                        positiveText: "Yes",
-                                        title: "Do you want to clear recents?",
+                                        negativeText: GPTModuleStrings.no,
+                                        positiveText: GPTModuleStrings.yes,
+                                        title: GPTModuleStrings.doYouWantClearRecents,
                                       );
                                     },
                                   ),
@@ -199,11 +201,11 @@ class _ChatGptSheetBottomSheetState extends State<ChatGptSheetBottomSheet> {
 
   void handleGenerateClick(BuildContext context) async {
     if (isLoading || (answerCont.text.isNotEmpty && !isTextAnimationCompleted)) {
-      toast("Please wait while it's generating content!");
+      toast(GPTModuleStrings.pleaseWaitGeneratingContent);
       return;
     }
     if (promptCont.text.isEmpty) {
-      toast("Please enter some text about, which type of content you want to generate!");
+      toast(GPTModuleStrings.pleaseEnterTextToGenerate);
       return;
     }
     hideKeyboard(context);
@@ -212,16 +214,15 @@ class _ChatGptSheetBottomSheetState extends State<ChatGptSheetBottomSheet> {
     isTextAnimationCompleted = false;
     setState(() {});
 
-    generateWithChatGpt("${promptCont.text} \n Make this proper ", showDebugLogs: true).then((value) async {
+    generateWithChatGpt("${promptCont.text} \n Make this proper ", showDebugLogs: widget.showDebugLogs).then((value) async {
+      answerCont.text = value.trim();
+      await 350.milliseconds.delay;
+      displayGeneratedText = true;
+      setState(() {});
+    }).catchError((e) {
+      toast(e.toString());
+    }).whenComplete(() {
       isLoading = false;
-      if (value.$2) {
-        answerCont.text = value.$1.trim();
-        await 350.milliseconds.delay;
-        displayGeneratedText = true;
-        setState(() {});
-      } else {
-        toast(value.$1);
-      }
     });
   }
 }

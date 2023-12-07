@@ -1,0 +1,12 @@
+{
+    "[dart]": {
+        "editor.codeActionsOnSave": {
+            "source.fixAll": true
+        },
+    },
+    "dart.lineLength": 250,
+    "editor.tokenColorCustomizations": {
+        "strings": "#26ff00"
+      },
+    "dart.flutterSdkPath": "/home/raj/flutter_sdks/flutter_3_16_0"
+}

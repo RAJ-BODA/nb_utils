@@ -5,46 +5,77 @@ import 'package:http/http.dart' as http;
 import 'package:lottie/lottie.dart';
 import '../../nb_utils.dart';
 import 'chat_gpt_component.dart';
+import 'chatgpt_strings.dart';
 
-Future<(String answer, bool status)> generateWithChatGpt(String prompt, {bool shortReply = false, bool showDebugLogs = false}) async {
-  
-  Map<String, String> header = {'Content-Type': 'application/json', 'Authorization': 'Bearer $chatGptApikey'};
-  
-  if (showDebugLogs) log('CHATGPT API HEADER: $header');
-
-  Map jsonBodyData = {"model": 'text-davinci-002', "prompt": "$prompt${shortReply ? ", Please reply in 1-2 line only" : ""}", "temperature": 0.7, "max_tokens": 1600, "top_p": 1, "frequency_penalty": 0, "presence_penalty": 0};
-  
-  if (showDebugLogs) log('CHATGPT API JSONBODYDATA: $jsonBodyData');
-  
-  if (prompt.isNotEmpty) {
-    try {
-      
-      var response = await http.post(Uri.parse("https://api.openai.com/v1/completions"), body: json.encode(jsonBodyData), headers: header);
-      
-      var jsonResponse = json.decode(response.body);
-      
-      if (showDebugLogs) log('getAnswerChatGPTApi JSONRESPONSE: $jsonResponse');
-      
-      if (response.statusCode == HttpStatus.ok) {
-        ChatGptAnswerResponseModel gptAnsResModel = ChatGptAnswerResponseModel.fromJson(jsonResponse);
-
-        if (showDebugLogs) log('GPTANSRESMODEL.VALUE.ID: ${gptAnsResModel.id}');
-        if (showDebugLogs) log('GPTANSRESMODEL.VALUE.ID: ${gptAnsResModel.choices[0].text}');
-
-        if (gptAnsResModel.choices.isNotEmpty && gptAnsResModel.choices[0].text.isNotEmpty) {
-          return (gptAnsResModel.choices[0].text.trim(), true);
-        } else {
-          return ("No data from chatgpt", false);
-        }
-      } else {
-        return ("Error Code: ${response.statusCode} ${response.reasonPhrase.validate()}", false);
-      }
-    } catch (e) {
-      if (showDebugLogs) log('getAnswerChatGPT  E: $e');
-      return ("Chatgpt function error : ${e.toString()}", false);
+/// Generates a response using the ChatGPT API based on the provided prompt.
+///
+/// Parameters:
+/// - `prompt`: The input prompt for generating a response.
+/// - `shortReply`: If true, it will generate a 1-2 line reply. Default is false.
+/// - `testWithoutKey`: If true, it will provide a static test response without using the actual API key. Default is false.
+/// - `showDebugLogs`: If true, debug logs will be printed on the debug console. Default is false.
+///
+/// Returns the generated answer. Throws an error message if the response is empty or an error occurs.
+Future<String> generateWithChatGpt(String prompt, {bool shortReply = false, bool testWithoutKey = false, bool showDebugLogs = false}) async {
+  if (testWithoutKey) {
+    //=========================================For Test Without Api==============================================
+    ChatGptAnswerResponseModel gptAnsResModel = ChatGptAnswerResponseModel.fromJson(jsonDecode(jsonEncode({
+      "id": "cmpl-6biNrkL5FlEhzIoGojdKPiRG6ZGN3",
+      "object": "text_completion",
+      "created": 1674446767,
+      "model": "text-davinci-002",
+      "choices": [
+        {"text": "I am ChatGPT, a large language model trained by OpenAI, based on the GPT-3.5 architecture.", "index": 0, "logprobs": null, "finish_reason": "stop"}
+      ],
+      "usage": {"prompt_tokens": 7, "completion_tokens": 61, "total_tokens": 68}
+    })));
+    log('GPTANSRESMODEL.VALUE.ID: ${gptAnsResModel.id}');
+    log('GPTANSRESMODEL.VALUE.ID: ${gptAnsResModel.choices[0].text}');
+    await 3.seconds.delay;
+    if (gptAnsResModel.choices.isNotEmpty && gptAnsResModel.choices[0].text.isNotEmpty) {
+      return gptAnsResModel.choices[0].text.trim();
+    } else {
+      throw "No data from chatgpt";
     }
+    //=========================================Api==============================================
   } else {
-    return ("Please enter some text", false);
+    Map<String, String> header = {'Content-Type': 'application/json', 'Authorization': 'Bearer $chatGptApikey'};
+
+    if (showDebugLogs) log('CHATGPT API HEADER: $header');
+
+    Map jsonBodyData = {"model": 'text-davinci-002', "prompt": "$prompt${shortReply ? ", Please reply in 1-2 line only" : ""}", "temperature": 0.7, "max_tokens": 1600, "top_p": 1, "frequency_penalty": 0, "presence_penalty": 0};
+
+    if (showDebugLogs) log('CHATGPT API JSONBODYDATA: $jsonBodyData');
+
+    if (prompt.isNotEmpty) {
+      try {
+        var response = await http.post(Uri.parse("https://api.openai.com/v1/completions"), body: json.encode(jsonBodyData), headers: header);
+
+        var jsonResponse = json.decode(response.body);
+
+        if (showDebugLogs) log('getAnswerChatGPTApi JSONRESPONSE: $jsonResponse');
+
+        if (response.statusCode == HttpStatus.ok) {
+          ChatGptAnswerResponseModel gptAnsResModel = ChatGptAnswerResponseModel.fromJson(jsonResponse);
+
+          if (showDebugLogs) log('GPTANSRESMODEL.VALUE.ID: ${gptAnsResModel.id}');
+          if (showDebugLogs) log('GPTANSRESMODEL.VALUE.ID: ${gptAnsResModel.choices[0].text}');
+
+          if (gptAnsResModel.choices.isNotEmpty && gptAnsResModel.choices[0].text.isNotEmpty) {
+            return gptAnsResModel.choices[0].text.trim();
+          } else {
+            throw GPTModuleStrings.noDataFromChatGPT;
+          }
+        } else {
+          throw "${GPTModuleStrings.errorCode}: ${response.statusCode} ${response.reasonPhrase.validate()}";
+        }
+      } catch (e) {
+        if (showDebugLogs) log('getAnswerChatGPT  E: $e');
+        throw "${GPTModuleStrings.chatgptFunctionError}: ${e.toString()}";
+      }
+    } else {
+      throw GPTModuleStrings.pleaseEnterSomeText;
+    }
   }
 }
 
@@ -208,6 +239,7 @@ extension ChatGptExt on Widget {
     required List<String> recentList,
     required Function(String) onFinish,
     InputDecoration? promptFieldInputDecoration,
+    bool showDebugLogs = false,
   }) {
     return Stack(
       children: [
@@ -230,10 +262,11 @@ extension ChatGptExt on Widget {
                     minChildSize: 1,
                     maxChildSize: 1,
                     builder: (context, scrollController) {
-                      return ChatGptSheetBottomSheet(
+                      return ChatGPTSheetBottomSheet(
                         scrollController: scrollController,
                         recentList: recentList,
                         promptFieldInputDecoration: promptFieldInputDecoration,
+                        showDebugLogs: showDebugLogs,
                       );
                     },
                   );
