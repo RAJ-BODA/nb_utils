@@ -8,5 +8,5 @@
     "editor.tokenColorCustomizations": {
         "strings": "#26ff00"
       },
-    "dart.flutterSdkPath": "/home/raj/flutter_sdks/flutter_3_16_0"
+    "dart.flutterSdkPath": "~/flutter_sdks/flutter_3_16_0"
 }

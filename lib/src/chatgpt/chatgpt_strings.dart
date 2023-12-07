@@ -15,4 +15,5 @@ class GPTModuleStrings {
   static String errorCode = "Error Code";
   static String pleaseEnterSomeText = "Please enter some text";
   static String chatgptFunctionError = "Chatgpt function error";
+  static String loading = "Loading...";
 }

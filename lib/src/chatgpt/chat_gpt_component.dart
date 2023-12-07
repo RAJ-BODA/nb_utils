@@ -1,5 +1,3 @@
-// ignore_for_file: must_be_immutable, argument_type_not_assignable_to_error_handler
-
 import 'package:flutter/material.dart';
 import 'package:nb_utils/nb_utils.dart';
 import 'package:animated_text_kit/animated_text_kit.dart';
@@ -8,10 +6,22 @@ import 'chatgpt_strings.dart';
 
 class ChatGPTSheetBottomSheet extends StatefulWidget {
   final ScrollController scrollController;
-  List<String> recentList;
-  bool showDebugLogs;
+  final List<String> recentList;
+  final bool showDebugLogs;
+  final bool shortReply;
+  final bool testWithoutKey;
+  final Widget? loading;
   final InputDecoration? promptFieldInputDecoration;
-  ChatGPTSheetBottomSheet({super.key, required this.recentList, this.showDebugLogs = false, this.promptFieldInputDecoration, required this.scrollController});
+  ChatGPTSheetBottomSheet({
+    super.key,
+    required this.recentList,
+    this.showDebugLogs = false,
+    this.shortReply = false,
+    this.testWithoutKey = false,
+    this.promptFieldInputDecoration,
+    required this.scrollController,
+    this.loading,
+  });
 
   @override
   State<ChatGPTSheetBottomSheet> createState() => _ChatGPTSheetBottomSheetState();
@@ -100,16 +110,13 @@ class _ChatGPTSheetBottomSheetState extends State<ChatGPTSheetBottomSheet> {
                             ),
                           16.height,
                           isLoading
-                              ? autoTypingView(context)
+                              ? autoTypingView(context, loading: widget.loading)
                               : Container(
                                   padding: EdgeInsets.all(8),
                                   width: context.width(),
                                   decoration: boxDecorationWithRoundedCorners(borderRadius: radius(defaultRadius), backgroundColor: displayGeneratedText ? context.primaryColor.withOpacity(0.1) : transparentColor),
                                   child: DefaultTextStyle(
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      color: Colors.black,
-                                    ),
+                                    style: primaryTextStyle(),
                                     child: AnimatedTextKit(
                                       repeatForever: false,
                                       totalRepeatCount: 1,
@@ -214,7 +221,12 @@ class _ChatGPTSheetBottomSheetState extends State<ChatGPTSheetBottomSheet> {
     isTextAnimationCompleted = false;
     setState(() {});
 
-    generateWithChatGpt("${promptCont.text} \n Make this proper ", showDebugLogs: widget.showDebugLogs).then((value) async {
+    generateWithChatGpt(
+      "${promptCont.text} \n Make this proper ",
+      shortReply: widget.shortReply,
+      showDebugLogs: widget.showDebugLogs,
+      testWithoutKey: widget.testWithoutKey,
+    ).then((value) async {
       answerCont.text = value.trim();
       await 350.milliseconds.delay;
       displayGeneratedText = true;
