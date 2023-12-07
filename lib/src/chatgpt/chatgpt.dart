@@ -203,7 +203,12 @@ autoTypingView(
 }
 
 extension ChatGptExt on Widget {
-  Widget chatGpt(BuildContext context, {required List<String> recentList, required Function(String) onFinish}) {
+  Widget chatGpt(
+    BuildContext context, {
+    required List<String> recentList,
+    required Function(String) onFinish,
+    InputDecoration? promptFieldInputDecoration,
+  }) {
     return Stack(
       children: [
         this,
@@ -228,6 +233,7 @@ extension ChatGptExt on Widget {
                       return ChatGptSheetBottomSheet(
                         scrollController: scrollController,
                         recentList: recentList,
+                        promptFieldInputDecoration: promptFieldInputDecoration,
                       );
                     },
                   );

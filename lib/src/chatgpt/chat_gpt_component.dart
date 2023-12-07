@@ -3,13 +3,13 @@
 import 'package:flutter/material.dart';
 import 'package:nb_utils/nb_utils.dart';
 import 'package:animated_text_kit/animated_text_kit.dart';
-
 import 'chatgpt.dart';
 
 class ChatGptSheetBottomSheet extends StatefulWidget {
   final ScrollController scrollController;
   List<String> recentList;
-  ChatGptSheetBottomSheet({super.key, required this.recentList, required this.scrollController});
+  final InputDecoration? promptFieldInputDecoration;
+  ChatGptSheetBottomSheet({super.key, required this.recentList, this.promptFieldInputDecoration, required this.scrollController});
 
   @override
   State<ChatGptSheetBottomSheet> createState() => _ChatGptSheetBottomSheetState();
@@ -55,7 +55,7 @@ class _ChatGptSheetBottomSheetState extends State<ChatGptSheetBottomSheet> {
                       AppTextField(
                         textFieldType: TextFieldType.MULTILINE,
                         controller: promptCont,
-                        decoration: defaultInputDecoration(hint: "write text here..."),
+                        decoration: widget.promptFieldInputDecoration ?? defaultInputDecoration(hint: "write text here..."),
                       ),
                       32.height,
                       Column(
